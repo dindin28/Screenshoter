@@ -47,6 +47,10 @@ endif()
 
 target_link_libraries(Screenshoter PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
 
+add_subdirectory("external/SQLite")
+target_link_directories(Screenshoter PRIVATE "external/SQLite")
+target_link_libraries(Screenshoter PRIVATE sqlite3)
+
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
 # If you are developing for iOS or macOS you should consider setting an
 # explicit, fixed bundle identifier manually though.
