@@ -28,7 +28,17 @@ MainWindow::~MainWindow()
 
 void MainWindow::onScreenshotTimeout()
 {
-    last_screenshot = takeScreenshot();
+    QPixmap new_screenshot = takeScreenshot();
+
+    QString similarity_str = QString("Similarity with last: %1%").arg(comparePixmap(new_screenshot, last_screenshot), 0, 'f', 2);
+    qDebug() << similarity_str;
+    ui->similarityLabel->setText(similarity_str);
+
+    QString checksum_str = QString("Checksum of current: %1").arg(new_screenshot.cacheKey());
+    qDebug() << checksum_str;
+    ui->checksumLabel->setText(checksum_str);
+
+    last_screenshot = new_screenshot;
     setLastScreenshot();
 }
 
@@ -57,6 +67,30 @@ QPixmap MainWindow::takeScreenshot() const
 {
     QScreen* screen = QApplication::primaryScreen();
     return screen->grabWindow(0);
+}
+
+double MainWindow::comparePixmap(const QPixmap& left, const QPixmap& right)
+{
+    // TODO: check sizes or scale second
+    QImage first(left.toImage());
+    QImage second(right.toImage());
+
+    int count = 0;
+    const int height = first.height();
+    const int width = first.width();
+    for(int i = 0; i < height; ++i)
+    {
+        QRgb *rgb_first = reinterpret_cast<QRgb*>(first.scanLine(i));
+        QRgb *rgb_second = reinterpret_cast<QRgb*>(second.scanLine(i));
+        for(int j = 0; j < width; ++j)
+        {
+            if(rgb_first[j] == rgb_second[j])
+                ++count;
+        }
+    }
+
+    double percentage = (count * 100.0) / (height * width);
+    return percentage;
 }
 
 void MainWindow::resizeEvent(QResizeEvent *event)

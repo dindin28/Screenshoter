@@ -18,6 +18,8 @@ public:
 
     QPixmap takeScreenshot() const;
 
+    double comparePixmap(const QPixmap& left, const QPixmap& right);
+
 public slots:
     void onScreenshotTimeout();
     void onTimerButtonPressed();
