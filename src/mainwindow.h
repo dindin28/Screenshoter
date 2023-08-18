@@ -1,5 +1,7 @@
-#ifndef MAINWINDOW_H
-#define MAINWINDOW_H
+#pragma once
+
+#include "screenshots_db.h"
+#include "screenshot_cell.h"
 
 #include <QMainWindow>
 #include <QTimer>
@@ -20,6 +22,9 @@ public:
 
     double comparePixmap(const QPixmap& left, const QPixmap& right);
 
+    bool storeCell(const ScreenshotCell& cell);
+    ScreenshotCell retriveLastCell();
+
 public slots:
     void onScreenshotTimeout();
     void onTimerButtonPressed();
@@ -34,8 +39,8 @@ private:
 
 private:
     Ui::MainWindow *ui;
-    QPixmap last_screenshot;
+    ScreenshotCell last_screenshot;
     QTimer screenshot_timer;
     QTimer update_remaining_time;
+    ScreenshotsDB screenshots_db;
 };
-#endif // MAINWINDOW_H

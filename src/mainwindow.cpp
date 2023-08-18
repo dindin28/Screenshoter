@@ -7,8 +7,14 @@
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
+    , screenshots_db("screenshots.db")
 {
     ui->setupUi(this);
+
+    if(!screenshots_db.init())
+        qDebug() << "Couldn't init:" << screenshots_db.getLastError().text();
+    if(!screenshots_db.createTable())
+        qDebug() << "Cannot create table:" << screenshots_db.getLastError().text();
 
     update_remaining_time.setInterval(15);
     connect(&screenshot_timer, &QTimer::timeout, this, &MainWindow::onScreenshotTimeout);
@@ -17,7 +23,15 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->timerPushButton, &QPushButton::pressed, this, &MainWindow::onTimerButtonPressed);
     connect(ui->makeScreenshotPushButton, &QPushButton::pressed, this, &MainWindow::onScreenshotTimeout);
 
-    last_screenshot = takeScreenshot();
+    ScreenshotCell last_cell = retriveLastCell();
+    if(last_cell.valid)
+    {
+        last_screenshot = last_cell;
+        setLastScreenshot();
+    }
+    else
+        onScreenshotTimeout();
+
     this->showMaximized();
 }
 
@@ -28,18 +42,21 @@ MainWindow::~MainWindow()
 
 void MainWindow::onScreenshotTimeout()
 {
-    QPixmap new_screenshot = takeScreenshot();
+    const QPixmap new_screenshot = takeScreenshot();
 
-    QString similarity_str = QString("Similarity with last: %1%").arg(comparePixmap(new_screenshot, last_screenshot), 0, 'f', 2);
-    qDebug() << similarity_str;
-    ui->similarityLabel->setText(similarity_str);
+    ScreenshotCell new_cell;
+    new_cell.screenshot = new_screenshot;
+    if(last_screenshot.valid)
+        new_cell.similarity_with_prev = comparePixmap(new_screenshot, last_screenshot.screenshot);
+    else
+        new_cell.similarity_with_prev = 0;
+    new_cell.checksum = new_screenshot.cacheKey();
+    new_cell.date = QDateTime::currentDateTime();
+    new_cell.valid = true;
 
-    QString checksum_str = QString("Checksum of current: %1").arg(new_screenshot.cacheKey());
-    qDebug() << checksum_str;
-    ui->checksumLabel->setText(checksum_str);
-
-    last_screenshot = new_screenshot;
+    last_screenshot = new_cell;
     setLastScreenshot();
+    storeCell(last_screenshot);
 }
 
 void MainWindow::onUpdateRemainingTime()
@@ -93,6 +110,30 @@ double MainWindow::comparePixmap(const QPixmap& left, const QPixmap& right)
     return percentage;
 }
 
+bool MainWindow::storeCell(const ScreenshotCell& cell)
+{
+    if(!screenshots_db.insert(cell))
+    {
+        qDebug() << "Couldn't insert:" << screenshots_db.getLastError().text();
+        return false;
+    }
+    return true;
+}
+
+ScreenshotCell MainWindow::retriveLastCell()
+{
+    QList<ScreenshotCell> list;
+    if(!screenshots_db.select(list))
+        qDebug() << "Couldn't select:" << screenshots_db.getLastError().text();
+
+    if(!list.empty())
+    {
+        return list.last();
+    }
+    return ScreenshotCell();
+}
+
+
 void MainWindow::resizeEvent(QResizeEvent *event)
 {
     QMainWindow::resizeEvent(event);
@@ -101,8 +142,14 @@ void MainWindow::resizeEvent(QResizeEvent *event)
 
 void MainWindow::setLastScreenshot()
 {
-    QPixmap pixmap = last_screenshot.scaled(ui->screenshotLabel->size(), Qt::KeepAspectRatio, Qt::SmoothTransformation);
+    QPixmap pixmap = last_screenshot.screenshot.scaled(ui->screenshotLabel->size(), Qt::KeepAspectRatio, Qt::SmoothTransformation);
     ui->screenshotLabel->setPixmap(pixmap);
+    QString similarity_str = QString("Similarity with last: %1%").arg(last_screenshot.similarity_with_prev);
+    ui->similarityLabel->setText(similarity_str);
+    QString checksum_str = QString("Checksum of current: %1").arg(last_screenshot.checksum);
+    ui->checksumLabel->setText(checksum_str);
+    QString datetime_str = QString("Date/Time of current: %1").arg(last_screenshot.date.toString());
+    ui->dateTimeLabel->setText(datetime_str);
 }
 
 void MainWindow::updateButton()
