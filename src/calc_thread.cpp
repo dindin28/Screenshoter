@@ -1,5 +1,7 @@
 #include "calc_thread.h"
 
+#include <QDebug>
+
 CalcThread::CalcThread(const QPixmap& new_screenshot_, const ScreenshotCell &old_cell_, QObject *parent)
   : QThread(parent),
     new_screenshot(new_screenshot_),
@@ -26,9 +28,14 @@ void CalcThread::run()
 
 int CalcThread::comparePixmap(const QPixmap& left, const QPixmap& right)
 {
-    // TODO: check sizes or scale second
     QImage first(left.toImage());
     QImage second(right.toImage());
+
+    if(first.size() != second.size())
+    {
+        qDebug() << "Sizes of images are not the same";
+        second = second.scaled(first.size(), Qt::KeepAspectRatio, Qt::SmoothTransformation);
+    }
 
     int count = 0;
     const int height = first.height();
