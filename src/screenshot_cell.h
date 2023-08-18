@@ -6,6 +6,10 @@
 
 struct ScreenshotCell
 {
+    ScreenshotCell() = default;
+    ScreenshotCell(const ScreenshotCell&) = default;
+    ~ScreenshotCell() = default;
+
     int id;
     QPixmap screenshot;
     int similarity_with_prev;
@@ -20,3 +24,5 @@ struct ScreenshotCell
          return out;            
     }
 };
+
+Q_DECLARE_METATYPE(ScreenshotCell)
