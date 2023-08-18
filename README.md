@@ -1,7 +1,13 @@
 # GUI screenshoter
 
-## Compile and Run
+## Describtion
+Qt-based GUI app, that make screenshot on the timer. Check every next screenshot with previous and gives similarity in %.
+<br>
+Every calculation of similarity and checksum goes in separate thread.
+<br>
+Also have SQLite-based database that store all of screenshots and retrive last after opening app again.
 
+## Compile and Run
 ```shell
 cmake -S . -B build && cmake --build build
 ```
