@@ -8,7 +8,7 @@
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
-    , screenshots_db("screenshots.db")
+    , screenshots_db("screenshots")
 {
     ui->setupUi(this);
 
@@ -120,14 +120,19 @@ void MainWindow::resizeEvent(QResizeEvent *event)
 
 void MainWindow::setLastScreenshot()
 {
-    QPixmap pixmap = last_screenshot.get().screenshot.scaled(ui->screenshotLabel->size(), Qt::KeepAspectRatio, Qt::SmoothTransformation);
-    ui->screenshotLabel->setPixmap(pixmap);
-    QString similarity_str = QString("Similarity with last: %1%").arg(last_screenshot.get().similarity_with_prev);
-    ui->similarityLabel->setText(similarity_str);
-    QString checksum_str = QString("Checksum of current: %1").arg(last_screenshot.get().checksum);
-    ui->checksumLabel->setText(checksum_str);
-    QString datetime_str = QString("Date/Time of current: %1").arg(last_screenshot.get().date.toString());
-    ui->dateTimeLabel->setText(datetime_str);
+    ScreenshotCell screenshot = last_screenshot.get();
+    if(screenshot.valid)
+    {
+        QPixmap pixmap = screenshot.screenshot.scaled(ui->screenshotLabel->size(), Qt::KeepAspectRatio, Qt::SmoothTransformation);
+        ui->screenshotLabel->setPixmap(pixmap);
+
+        QString similarity_str = QString("Similarity with last: %1%").arg(last_screenshot.get().similarity_with_prev);
+        ui->similarityLabel->setText(similarity_str);
+        QString checksum_str = QString("Checksum of current: %1").arg(last_screenshot.get().checksum);
+        ui->checksumLabel->setText(checksum_str);
+        QString datetime_str = QString("Date/Time of current: %1").arg(last_screenshot.get().date.toString());
+        ui->dateTimeLabel->setText(datetime_str);
+    }
 }
 
 void MainWindow::updateButton()

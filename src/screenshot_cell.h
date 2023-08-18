@@ -6,7 +6,9 @@
 
 struct ScreenshotCell
 {
-    ScreenshotCell() = default;
+    ScreenshotCell()
+      : valid(false)
+    {}
     ScreenshotCell(const ScreenshotCell&) = default;
     ~ScreenshotCell() = default;
 
