@@ -18,3 +18,11 @@ cmake -S . -B build && cmake --build build
 
 ## GUI View
 <img src="https://github.com/dindin28/Screenshoter/blob/master/resources/pics/example.jpg" alt="Example View" />
+
+## Known issue
+Wayland based desktop environments are not supported
+
+Check with
+```bash
+echo $XDG_SESSION_TYPE
+```
